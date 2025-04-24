@@ -82,8 +82,8 @@ export default function CreditSlider() {
     segments.length > 0 ? Math.max(...segments.map((s) => s.maxValue)) : 6000;
 
   // Definir altura do segmento
-  const segmentHeight = 15; // altura em pixels
-  const tradeInSegmentHeight = 30; // altura do segmento de trade-in (um pouco maior)
+  const segmentHeight = 10; // altura em pixels
+  const tradeInSegmentHeight = 15; // altura do segmento de trade-in (um pouco maior)
 
   // Limitar o valor do slider ao valor mínimo do trade-in
   useEffect(() => {
@@ -261,9 +261,9 @@ export default function CreditSlider() {
                 <div
                   style={{
                     left: `${calculatePosition(sliderValue)}%`,
-                    height: `${segmentHeight}px`,
-                    width: `${segmentHeight}px`,
-                    top: 0,
+                    height: `${segmentHeight * 2}px`,
+                    width: `${segmentHeight * 2}px`,
+                    top: `-${segmentHeight / 2}px`,
                     backgroundColor: currentSegment
                       ? styleColorMap[currentSegment.style]
                       : "#888888",
