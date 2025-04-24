@@ -3,25 +3,7 @@
 import type React from "react";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, Car } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Enum para os estilos dos segmentos
 enum SegmentStyle {
@@ -53,41 +35,44 @@ const styleNameMap = {
   [SegmentStyle.APPROVED]: "Aprovado",
 };
 
+const segments: Segment[] = [
+  {
+    id: "1",
+    minValue: 0,
+    maxValue: 1999.99,
+    blocked: true,
+    style: SegmentStyle.REJECTED,
+  },
+  {
+    id: "2",
+    minValue: 2000,
+    maxValue: 3999.99,
+    blocked: false,
+    style: SegmentStyle.PENDING,
+  },
+  {
+    id: "3",
+    minValue: 4000,
+    maxValue: 6000,
+    blocked: false,
+    style: SegmentStyle.APPROVED,
+  },
+];
+
+// Valor do trade-in (carro)
+const tradeInValue: number = 3000;
+
 export default function CreditSlider() {
-  // Valor do trade-in (carro)
-  const [tradeInValue, setTradeInValue] = useState<number>(3000);
-
-  const [segments, setSegments] = useState<Segment[]>([
-    {
-      id: "1",
-      minValue: 0,
-      maxValue: 2000,
-      blocked: true,
-      style: SegmentStyle.REJECTED,
-    },
-    {
-      id: "2",
-      minValue: 2000,
-      maxValue: 4000,
-      blocked: false,
-      style: SegmentStyle.PENDING,
-    },
-    {
-      id: "3",
-      minValue: 4000,
-      maxValue: 6000,
-      blocked: false,
-      style: SegmentStyle.APPROVED,
-    },
-  ]);
-
-  const [newMinValue, setNewMinValue] = useState<number>(0);
-  const [newMaxValue, setNewMaxValue] = useState<number>(2000);
-  const [newBlocked, setNewBlocked] = useState<boolean>(false);
-  const [newStyle, setNewStyle] = useState<SegmentStyle>(SegmentStyle.PENDING);
-
   const [sliderValue, setSliderValue] = useState<number>(4000);
   const [currentSegment, setCurrentSegment] = useState<Segment | null>(null);
+
+  const blockedSegments = segments.find(
+    (segment) => segment.blocked
+  ) as Segment;
+
+  const firstSegmentAvailable = segments.find(
+    (segment) => !segment.blocked
+  ) as Segment;
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const minValue = 0;
@@ -114,48 +99,6 @@ export default function CreditSlider() {
       ) || null;
     setCurrentSegment(current);
   }, [sliderValue, segments]);
-
-  const addSegment = () => {
-    // Verificar se o novo segmento se sobrepõe a segmentos existentes
-    const overlapping = segments.some(
-      (segment) =>
-        (newMinValue >= segment.minValue && newMinValue <= segment.maxValue) ||
-        (newMaxValue >= segment.minValue && newMaxValue <= segment.maxValue) ||
-        (newMinValue <= segment.minValue && newMaxValue >= segment.maxValue)
-    );
-
-    if (overlapping) {
-      alert(
-        "O novo segmento se sobrepõe a segmentos existentes. Ajuste os valores."
-      );
-      return;
-    }
-
-    if (newMinValue >= newMaxValue) {
-      alert("O valor mínimo deve ser menor que o valor máximo.");
-      return;
-    }
-
-    const newSegment: Segment = {
-      id: Date.now().toString(),
-      minValue: newMinValue,
-      maxValue: newMaxValue,
-      blocked: newBlocked,
-      style: newStyle,
-    };
-
-    setSegments(
-      [...segments, newSegment].sort((a, b) => a.minValue - b.minValue)
-    );
-    setNewMinValue(newMaxValue);
-    setNewMaxValue(newMaxValue + 1000);
-    setNewBlocked(false);
-    setNewStyle(SegmentStyle.PENDING);
-  };
-
-  const removeSegment = (id: string) => {
-    setSegments(segments.filter((segment) => segment.id !== id));
-  };
 
   // Função para formatar valores monetários
   const formatCurrency = (value: number) => {
@@ -200,7 +143,16 @@ export default function CreditSlider() {
       // Limitar o valor para não ficar abaixo do trade-in
       const value = Math.max(rawValue, tradeInValue);
 
-      setSliderValue(value);
+      // Verificar se o valor está no segmento bloqueado
+      const isAboveBlockedSegment = blockedSegments
+        ? value < blockedSegments.maxValue
+        : false;
+
+      if (isAboveBlockedSegment) {
+        setSliderValue(firstSegmentAvailable.minValue);
+      } else {
+        setSliderValue(value);
+      }
     };
 
     const stopDrag = () => {
@@ -215,18 +167,9 @@ export default function CreditSlider() {
   // Ordenar segmentos por valor mínimo
   const sortedSegments = [...segments].sort((a, b) => a.minValue - b.minValue);
 
-  // Calcular o valor disponível (valor do slider - trade-in)
-  const availableValue = sliderValue - tradeInValue;
-
   return (
     <div className="container mx-auto py-10 px-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Régua de Crédito Interativa</CardTitle>
-          <CardDescription>
-            Deslize o marcador para visualizar diferentes faixas de crédito
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-6">
             {/* Current value display */}
@@ -234,41 +177,10 @@ export default function CreditSlider() {
               <div className="text-3xl font-bold">
                 {formatCurrency(sliderValue)}
               </div>
-              {currentSegment && (
-                <div
-                  className="mt-2 px-3 py-1 rounded-full inline-block text-white"
-                  style={{
-                    backgroundColor: styleColorMap[currentSegment.style],
-                    backgroundImage: currentSegment.blocked
-                      ? `repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.5) 5px, rgba(255,255,255,0.5) 10px)`
-                      : "none",
-                  }}
-                >
-                  {styleNameMap[currentSegment.style]}
-                  {currentSegment.blocked ? " (Bloqueado)" : ""}
-                </div>
-              )}
-
-              {/* Trade-in value display */}
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-                  <Car className="h-4 w-4 text-gray-600" />
-                  <span className="font-medium">
-                    Trade-in: {formatCurrency(tradeInValue)}
-                  </span>
-                </div>
-                <span className="font-bold">+</span>
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold">
-                  Disponível: {formatCurrency(availableValue)}
-                </div>
-              </div>
             </div>
 
-            {/* Interactive slider */}
             <div className="mt-8 mb-4 relative">
-              {/* Lollipop pins at segment boundaries - now positioned above the slider */}
               {sortedSegments.map((segment, index) => {
-                // Não adicionar pino no último segmento
                 if (index === sortedSegments.length - 1) return null;
 
                 return (
@@ -366,140 +278,6 @@ export default function CreditSlider() {
             <div className="w-full flex justify-between text-sm text-gray-500 -mt-2">
               <span>{formatCurrency(minValue)}</span>
               <span>{formatCurrency(maxValue)}</span>
-            </div>
-
-            {/* Trade-in value controls */}
-            <div className="grid gap-4 pt-4 border-t">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Car className="h-5 w-5" />
-                Valor do Trade-in (Carro)
-              </h3>
-              <div className="space-y-2">
-                <Label htmlFor="tradeInValue">Valor do Carro</Label>
-                <Input
-                  id="tradeInValue"
-                  type="number"
-                  min="0"
-                  max={maxValue}
-                  step="100"
-                  value={tradeInValue}
-                  onChange={(e) => setTradeInValue(Number(e.target.value))}
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Este valor define o limite mínimo a partir do qual o marcador
-                  pode ser movido.
-                </p>
-              </div>
-            </div>
-
-            {/* Segment list */}
-            <div className="space-y-4 mt-2 pt-4 border-t">
-              <h3 className="text-lg font-medium">Segmentos da Régua</h3>
-              <div className="grid gap-4">
-                {sortedSegments.map((segment) => (
-                  <div
-                    key={segment.id}
-                    className="flex items-center gap-4 p-3 border rounded-md"
-                  >
-                    <div
-                      className="w-8 h-8 rounded-md"
-                      style={{
-                        backgroundColor: styleColorMap[segment.style],
-                        backgroundImage: segment.blocked
-                          ? `repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.5) 5px, rgba(255,255,255,0.5) 10px)`
-                          : "none",
-                      }}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {formatCurrency(segment.minValue)} -{" "}
-                        {formatCurrency(segment.maxValue)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Status: {styleNameMap[segment.style]}
-                        {segment.blocked ? " (Bloqueado)" : ""}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeSegment(segment.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Add new segment form */}
-            <div className="grid gap-4 pt-4 border-t">
-              <h3 className="text-lg font-medium">Adicionar Novo Segmento</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minValue">Valor Mínimo</Label>
-                  <Input
-                    id="minValue"
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={newMinValue}
-                    onChange={(e) => setNewMinValue(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxValue">Valor Máximo</Label>
-                  <Input
-                    id="maxValue"
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={newMaxValue}
-                    onChange={(e) => setNewMaxValue(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="style">Status</Label>
-                  <Select
-                    value={newStyle}
-                    onValueChange={(value) =>
-                      setNewStyle(value as SegmentStyle)
-                    }
-                  >
-                    <SelectTrigger id="style">
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={SegmentStyle.REJECTED}>
-                        Recusado
-                      </SelectItem>
-                      <SelectItem value={SegmentStyle.PENDING}>
-                        Em análise
-                      </SelectItem>
-                      <SelectItem value={SegmentStyle.APPROVED}>
-                        Aprovado
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2 h-full pt-8">
-                  <Switch
-                    id="blocked"
-                    checked={newBlocked}
-                    onCheckedChange={setNewBlocked}
-                  />
-                  <Label htmlFor="blocked">
-                    Segmento bloqueado (tracejado)
-                  </Label>
-                </div>
-              </div>
-
-              <Button onClick={addSegment} className="w-full mt-2">
-                <Plus className="mr-2 h-4 w-4" /> Adicionar Segmento
-              </Button>
             </div>
           </div>
         </CardContent>
