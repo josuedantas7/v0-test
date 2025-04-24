@@ -53,7 +53,7 @@ const segments: Segment[] = [
   {
     id: "3",
     minValue: 4000,
-    maxValue: 6000,
+    maxValue: 74231.24,
     blocked: false,
     style: SegmentStyle.APPROVED,
   },
@@ -120,7 +120,7 @@ export default function CreditSlider() {
     const rect = sliderRef.current.getBoundingClientRect();
     const clickPosition = e.clientX - rect.left;
     const percentage = clickPosition / rect.width;
-    const rawValue = Math.round(minValue + percentage * (maxValue - minValue));
+    const rawValue = minValue + percentage * (maxValue - minValue);
 
     // Limitar o valor para não ficar abaixo do trade-in
     const value = Math.max(rawValue, tradeInValue);
@@ -136,9 +136,8 @@ export default function CreditSlider() {
       const rect = sliderRef.current.getBoundingClientRect();
       const clickPosition = e.clientX - rect.left;
       const percentage = Math.min(Math.max(clickPosition / rect.width, 0), 1);
-      const rawValue = Math.round(
-        minValue + percentage * (maxValue - minValue)
-      );
+      const rawValue = minValue + percentage * (maxValue - minValue)
+      
 
       // Limitar o valor para não ficar abaixo do trade-in
       const value = Math.max(rawValue, tradeInValue);
