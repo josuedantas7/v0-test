@@ -83,7 +83,7 @@ export default function CreditSlider() {
 
   // Definir altura do segmento
   const segmentHeight = 10; // altura em pixels
-  const tradeInSegmentHeight = 15; // altura do segmento de trade-in (um pouco maior)
+  const tradeInSegmentHeight = 16; // altura do segmento de trade-in (um pouco maior)
 
   // Limitar o valor do slider ao valor mínimo do trade-in
   useEffect(() => {
