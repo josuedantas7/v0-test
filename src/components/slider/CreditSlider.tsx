@@ -7,9 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // Enum para os estilos dos segmentos
 enum SegmentStyle {
-  REJECTED = "rejected",
-  PENDING = "pending",
-  APPROVED = "approved",
+  NoOffers = "nooffers",
+  Uncertain = "uncertain",
+  Approval = "approval",
+  HighChance = "highchance",
 }
 
 // Interface para os segmentos
@@ -23,16 +24,10 @@ interface Segment {
 
 // Mapeamento de estilos para cores
 const styleColorMap = {
-  [SegmentStyle.REJECTED]: "#FF5733", // Vermelho para recusado
-  [SegmentStyle.PENDING]: "#FFC300", // Amarelo para chance de aprovação
-  [SegmentStyle.APPROVED]: "#33CC5A", // Verde para aprovado
-};
-
-// Mapeamento de estilos para nomes em português
-const styleNameMap = {
-  [SegmentStyle.REJECTED]: "Recusado",
-  [SegmentStyle.PENDING]: "Em análise",
-  [SegmentStyle.APPROVED]: "Aprovado",
+  [SegmentStyle.NoOffers]: "#C8C8C8",
+  [SegmentStyle.Uncertain]: "#949494",
+  [SegmentStyle.Approval]: "#5A646E",
+  [SegmentStyle.HighChance]: "#0F0F0F", 
 };
 
 const segments: Segment[] = [
@@ -41,21 +36,28 @@ const segments: Segment[] = [
     minValue: 0,
     maxValue: 1999.99,
     blocked: true,
-    style: SegmentStyle.REJECTED,
+    style: SegmentStyle.NoOffers,
   },
   {
     id: "2",
     minValue: 2000,
     maxValue: 3999.99,
     blocked: false,
-    style: SegmentStyle.PENDING,
+    style: SegmentStyle.Uncertain,
   },
   {
     id: "3",
     minValue: 4000,
-    maxValue: 74231.24,
+    maxValue: 5999.99,
     blocked: false,
-    style: SegmentStyle.APPROVED,
+    style: SegmentStyle.Approval,
+  },
+  {
+    id: "4",
+    minValue: 6000,
+    maxValue: 10123.21,
+    blocked: false,
+    style: SegmentStyle.HighChance,
   },
 ];
 
